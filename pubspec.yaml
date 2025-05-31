@@ -1,5 +1,4 @@
-
-name: flutter_taxi_app_env_fixed
+name: flutter_rmago_app_env_fixed
 description: Flutter app with .env as asset
 publish_to: 'none'
 version: 1.0.0
@@ -13,8 +12,10 @@ dependencies:
   flutter_dotenv: ^5.1.0
   flutter_naver_map: ^1.0.2
   url_launcher: ^6.2.1
+  kakao_flutter_sdk_user: ^1.9.7+3  # ✅ null safety 지원 버전으로 변경
+  dio: ^5.4.0                   # ✅ JWT 인터셉터에 활용 예정
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/env
+    - assets/.env
