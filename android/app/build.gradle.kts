@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    namespace = "com.example.flutter_taxi_app_env_fixed"
+    namespace = "com.example.flutter_rmago_app_env_fixed"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
     defaultConfig {
-        applicationId = "com.example.flutter_taxi_app_env_fixed"
+        applicationId = "com.example.flutter_rmago_app_env_fixed"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
