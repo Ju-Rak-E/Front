@@ -4,16 +4,51 @@
 // 작성 이유: 카카오 로그인 버튼을 화면 상단에 배치하고 금액 입력 및 지도 보기 기능 구성
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'result_map_screen.dart';
-import '../widgets/kakao_login.dart'; // ✅ 위젯 import
+import '../widgets/kakao_login.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final TextEditingController amountController = TextEditingController();
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
+class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController amountController = TextEditingController();
+  String serverStatus = "서버 상태를 확인 중입니다...";
+
+  @override
+  void initState() {
+    super.initState();
+    _checkServerConnection();
+  }
+
+  Future<void> _checkServerConnection() async {
+    try {
+      final response =
+          await http.get(Uri.parse('http://192.168.219.104:8080/health'));
+      print('서버 응답 상태: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        setState(() {
+          serverStatus = "서버 연결 성공!";
+        });
+      } else {
+        setState(() {
+          serverStatus = "서버 연결 실패: 상태 코드 ${response.statusCode}";
+        });
+      }
+    } catch (e) {
+      print('서버 연결 예외: $e');
+      setState(() {
+        serverStatus = "서버 연결 실패: $e";
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("택시요금 계산기 + 로그인")),
       body: Padding(
@@ -21,8 +56,12 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ✅ 상단에 카카오 로그인 버튼 배치
             const KakaoLoginButton(),
+            const SizedBox(height: 10),
+
+            // 서버 상태 출력
+            Text(serverStatus, style: const TextStyle(color: Colors.blue)),
+
             const SizedBox(height: 30),
 
             const Text(
