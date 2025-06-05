@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../service/auth_service.dart';
 
 class KakaoLoginButton extends StatefulWidget {
   const KakaoLoginButton({super.key});
@@ -55,6 +56,9 @@ class _KakaoLoginButtonState extends State<KakaoLoginButton> {
       setState(() {
         isLoggedIn = true; // 로그인 성공 시 상태 업데이트
       });
+
+      // 카카오 로그인 후 백엔드로 accessToken 보내기
+      AuthService().sendAccessTokenToBackend(token.accessToken);
 
       // 로그인한 사용자 정보 출력 (UI에서 확인용)
       final user = await UserApi.instance.me();

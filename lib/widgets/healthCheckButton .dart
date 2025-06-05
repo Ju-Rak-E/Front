@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class HealthCheckButton extends StatefulWidget {
@@ -15,8 +16,8 @@ class _HealthCheckButtonState extends State<HealthCheckButton> {
   Future<void> _checkServerConnection() async {
     try {
       // 실제 백엔드 IP 주소 사용 (192.168.x.x는 실제 IP 주소로 바꿔야 함)
-      final response =
-          await http.get(Uri.parse('http://192.168.219.108:8080/health'));
+      final response = await http
+          .get(Uri.parse(dotenv.env['BACKEND_BASE_URL']! + '/health'));
 
       // 응답 상태 코드 확인
       print('서버 응답 상태: ${response.statusCode}');
