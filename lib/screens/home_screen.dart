@@ -25,10 +25,11 @@ class _HomeScreenState extends State<HomeScreen> {
     _checkServerConnection();
   }
 
+  // 서버 상태를 확인하는 메소드
   Future<void> _checkServerConnection() async {
     try {
       final response =
-          await http.get(Uri.parse('http://192.168.219.104:8080/health'));
+          await http.get(Uri.parse('http://192.168.0.2:8080/health'));
       print('서버 응답 상태: ${response.statusCode}');
       if (response.statusCode == 200) {
         setState(() {
@@ -47,6 +48,18 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // 새로운 HealthCheckButton 추가
+  Widget _healthCheckButton() {
+    return ElevatedButton(
+      onPressed: _checkServerConnection, // 버튼 클릭 시 서버 상태 확인
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+      child: const Text(
+        '서버 상태 확인', // 버튼 텍스트
+        style: TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,11 +69,20 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // 카카오 로그인 버튼
             const KakaoLoginButton(),
             const SizedBox(height: 10),
 
             // 서버 상태 출력
-            Text(serverStatus, style: const TextStyle(color: Colors.blue)),
+            Text(
+              serverStatus,
+              style: const TextStyle(color: Colors.blue),
+            ),
+
+            const SizedBox(height: 20),
+
+            // 서버 상태 확인 버튼 추가
+            _healthCheckButton(),
 
             const SizedBox(height: 30),
 
