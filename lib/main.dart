@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_naver_map/flutter_naver_map.dart';
-import 'screens/home_screen.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'screens/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await dotenv.load(fileName: "assets/.env");
-    print("✅ ENV LOADED: ${dotenv.env['NAVER_CLIENT_ID']}");
-    await NaverMapSdk.instance.initialize(
-      clientId: dotenv.env['NAVER_CLIENT_ID']!,
-    );
+    print("✅ ENV LOADED: ${dotenv.env['KAKAO_NATIVE_APP_KEY']}");
 
     print('ENV KEY: ${dotenv.env['KAKAO_NATIVE_APP_KEY']}');
 
@@ -30,7 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Naver Map + KakaoT (.env)',
+      title: 'Kakao Map + KakaoT',
       theme: ThemeData(primarySwatch: Colors.green),
       home: const HomeScreen(),
     );
