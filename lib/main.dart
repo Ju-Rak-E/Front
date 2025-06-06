@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
+import 'utils/route_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +30,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Kakao Map + KakaoT',
       theme: ThemeData(primarySwatch: Colors.green),
-      home: const HomeScreen(),
+      navigatorKey: RouteManager.navigatorKey,
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/login': (context) => const LoginScreen(),
+      },
+      initialRoute: '/',
     );
   }
 }
