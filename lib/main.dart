@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // 환경 변수 로드
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart'; // 카카오 사용자 SDK
 import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart'; // 카카오 공통 SDK
 import 'screens/home_screen.dart'; // 홈 화면
 import 'service/auth_service.dart'; // 백엔드와의 통신을 담당하는 AuthService
+import 'screens/login_screen.dart';
+import 'utils/route_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding
@@ -39,9 +42,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Kakao Map + KakaoT', // 앱 제목
-      theme: ThemeData(primarySwatch: Colors.green), // 앱의 기본 색상 설정
-      home: const HomeScreen(), // 홈 화면을 설정
+      title: 'Kakao Map + KakaoT',  // 앱 제목
+      theme: ThemeData(primarySwatch: Colors.green),  // 앱의 기본 색상 설정
+      navigatorKey: RouteManager.navigatorKey,
+      routes: {
+        '/': (context) => const HomeScreen(), // 홈 화면을 설정
+        '/login': (context) => const LoginScreen(),
+      },
+      initialRoute: '/',
     );
   }
 }
