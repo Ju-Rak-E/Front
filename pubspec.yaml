@@ -7,6 +7,7 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
+  # 기존 패키지들
   http: ^0.13.6
   flutter:
     sdk: flutter
@@ -17,8 +18,40 @@ dependencies:
   dio: ^5.4.0                   # JWT 인터셉터에 활용 예정
   flutter_secure_storage: ^9.0.0  #JWT를 암호화해 안전하게 저장하는 법
   flutter_inappwebview: ^6.0.0
+  
+  # 새로 추가된 패키지들 (UI 및 기능 개선용)
+  cupertino_icons: ^1.0.2       # iOS 스타일 아이콘
+  
+  # 위치 서비스
+  geolocator: ^9.0.2            # 위치 정보 및 권한 관리
+  permission_handler: ^10.4.3   # 권한 요청 관리
+  
+  # 공유 기능
+  share_plus: ^7.1.0            # 결과 공유 기능
+  
+  # 로컬 저장소
+  shared_preferences: ^2.2.0    # 사용자 설정 저장
+  
+  # 상태 관리 (선택사항)
+  provider: ^6.0.5              # 상태 관리 패키지
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true
+  
+  # 에셋 파일들
   assets:
     - assets/.env
+    - assets/images/           # 이미지 에셋 폴더 (필요시 생성)
+  
+  # 폰트 설정 (선택사항 - 더 나은 타이포그래피를 위해)
+  fonts:
+    - family: NotoSans
+      fonts:
+        - asset: fonts/NotoSansKR-Regular.ttf
+        - asset: fonts/NotoSansKR-Bold.ttf
+          weight: 700
