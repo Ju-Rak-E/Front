@@ -1,0 +1,119 @@
+[33mcommit 50d45d67a811fca8177ff0802ab5999209010015[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeat/login[m[33m)[m
+Author: Kimbang1 <arto135@naver.com>
+Date:   Mon Jun 9 00:33:36 2025 +0900
+
+    pull 하기전 커밋
+
+[33mcommit fd1a1db131dacdf6f46a94348fd2e980485b1aac[m
+Merge: 4007bf4 04d11ad
+Author: Kimbang1 <arto135@naver.com>
+Date:   Fri Jun 6 17:31:19 2025 +0900
+
+    Merge pull request #6 from Ju-Rak-E/feat/dioInterceptor
+    
+    feat : dio Interceptor, login page, routes
+
+[33mcommit 04d11ad4713c6e017733b9d695d1aa823281f4bb[m
+Merge: ce1fb23 4007bf4
+Author: 남인경 <113659622+Ninky0@users.noreply.github.com>
+Date:   Fri Jun 6 17:28:39 2025 +0900
+
+    Merge branch 'main' into feat/dioInterceptor
+
+[33mcommit ce1fb2344c21c3c517c3fa54da6147f6356189a2[m
+Author: Ninky0 <2020113392@dgu.ac.kr>
+Date:   Fri Jun 6 17:24:44 2025 +0900
+
+    feat : dio Interceptor, login page, routes
+
+[33mcommit 4007bf4fe3c003623291329735d290480fdbcbf3[m
+Merge: 303546a 2ed50a8
+Author: 남인경 <113659622+Ninky0@users.noreply.github.com>
+Date:   Fri Jun 6 17:17:45 2025 +0900
+
+    Merge pull request #5 from Ju-Rak-E/feat/login
+    
+    Feat/login
+
+[33mcommit 2ed50a8d0c1a09282476a58153214dc044f1f09a[m[33m ([m[1;31morigin/feat/login[m[33m)[m
+Merge: 04b1fbd 303546a
+Author: Kimbang1 <arto135@naver.com>
+Date:   Fri Jun 6 04:15:52 2025 +0900
+
+    백엔드로 accessToken 전송 성공
+
+[33mcommit 04b1fbdeadadcef7e521c32875c26f7aac5a26fe[m
+Author: Kimbang1 <arto135@naver.com>
+Date:   Thu Jun 5 18:16:45 2025 +0900
+
+    카카오 로그인 성공
+
+[33mcommit 303546ab4479739879e609d0ac301f4993b32e92[m
+Merge: a0121c3 746f4b6
+Author: Kimbang1 <arto135@naver.com>
+Date:   Thu Jun 5 17:54:26 2025 +0900
+
+    Merge pull request #4 from Ju-Rak-E/feat/kakomap
+    
+    feat:naver_map -> kakao_map 변경
+
+[33mcommit 746f4b6f82d043649e25c2818cd125623e6ce99e[m
+Author: pangvelop <kgo103@naver.com>
+Date:   Wed Jun 4 02:05:30 2025 +0900
+
+    feat:naver_map -> kakao_map 변경
+
+[33mcommit a0121c39149efde6492aa879dd3ca892bdfc70a4[m
+Merge: be2d137 edfe515
+Author: Kimbang1 <arto135@naver.com>
+Date:   Mon Jun 2 22:36:25 2025 +0900
+
+    Merge pull request #2 from Ju-Rak-E/feat/login
+    
+    Feat/login
+
+[33mcommit edfe515a9c1a4cb2f868241f7dd8804ec7de0a1e[m
+Merge: c9a65a4 be2d137
+Author: Kimbang1 <arto135@naver.com>
+Date:   Mon Jun 2 22:33:35 2025 +0900
+
+    Merge branch 'main' of https://github.com/Ju-Rak-E/Front into feat/login
+
+[33mcommit c9a65a421c593f27b7bdda655332236cf5c3718b[m
+Author: Kimbang1 <arto135@naver.com>
+Date:   Mon Jun 2 22:30:07 2025 +0900
+
+    로그인 버튼관련 서버헬스 체크 설정
+
+[33mcommit be2d1379f32a68e5bbbe97c0d4c82c4b1f399380[m
+Merge: a87d052 56898ef
+Author: Kimbang1 <arto135@naver.com>
+Date:   Sat May 31 14:33:12 2025 +0900
+
+    Merge pull request #1 from Ju-Rak-E/feat/login
+    
+    Feat/login
+
+[33mcommit 56898ef3ef3ea72700b0cde4738792c5ddec5e4a[m
+Author: Kimbang1 <arto135@naver.com>
+Date:   Sat May 31 14:30:10 2025 +0900
+
+    카카오 로그인 관련 버튼완료
+
+[33mcommit a923751ccedc149e23340d30558a02930f408405[m
+Author: Kimbang1 <arto135@naver.com>
+Date:   Sat May 24 02:55:12 2025 +0900
+
+    로그인 관련 메인페스트 패키지 카카오 콘솔에 등록
+
+[33mcommit a87d0526d466bbb28cdb28dbfbce33a004e9b46e[m[33m ([m[1;32mmain[m[33m)[m
+Author: 김광오 <107342259+pangvelop@users.noreply.github.com>
+Date:   Fri May 23 03:52:56 2025 +0900
+
+    Update README.md
+
+[33mcommit f3048516dc302d9c3b06a62b0c358906d218d426[m
+Author: pangvelop <kgo103@naver.com>
+Date:   Fri May 23 03:50:38 2025 +0900
+
+    initial

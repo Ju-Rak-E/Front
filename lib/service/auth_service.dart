@@ -15,32 +15,35 @@ class AuthService {
       // 백엔드 URL 설정 (환경 변수에서 로드)
       final String backendUrl =
           dotenv.env['BACKEND_BASE_URL']! + '/customer/login/kakao/android';
-      print("로그인 관련 백엔드 URL확인" + backendUrl);
+      print("로그인 관련 백엔드 URL확인: $backendUrl");
 
-      // 요청 헤더에 Bearer Token 추가
+      // 요청 헤더 설정
       Options options = Options(
         headers: {
-          'Authorization':
-              'Bearer $accessToken', // Bearer Token을 Authorization 헤더에 추가
-          'Content-Type': 'application/json', // 헤더에 Content-Type 명시
+          'Content-Type': 'application/json', // Content-Type을 명시
         },
       );
 
       // 로그: 전송할 URL과 데이터 확인
-      print("Sending request to: $backendUrl with accessToken: $accessToken");
+      print("전송할 URL: $backendUrl with 데이터: $accessToken");
 
-      // POST 요청 보내기
-      Response response = await _dio.post(backendUrl,
-          options: options, data: {'access_token': accessToken}); // 요청 보내기
+      // POST 요청 보내기 (액세스 토큰을 요청 본문에 포함)
+      Response response = await _dio.post(
+        backendUrl,
+        options: options,
+        data: {
+          'accessToken': accessToken, // 액세스 토큰을 바디에 포함
+        },
+      );
 
       // 응답 처리
       if (response.statusCode == 200) {
-        // 성공적으로 토큰을 받았을 경우 처리
+        // 성공적으로 로그인 처리
         print('로그인 성공(auth_service): ${response.data}');
       } else {
         // 응답 상태 코드가 200이 아닐 경우 처리
-        print('로그인 실패(auth_service): ${response.statusCode}'); // 상태 코드 출력
-        print('응답 본문: ${response.data}'); // 응답 본문 출력
+        print('로그인 실패(auth_service): ${response.statusCode}');
+        print('응답 본문: ${response.data}');
       }
     } catch (e) {
       // DioError 예외 처리

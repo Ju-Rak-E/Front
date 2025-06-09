@@ -3,7 +3,7 @@ import 'token_storage.dart';
 import 'route_manager.dart';
 
 /// Dio HTTP 클라이언트의 인터셉터
-/// 
+///
 /// API 요청에 자동으로 인증 토큰을 추가하고,
 /// 토큰 만료 시 자동으로 갱신을 시도합니다.
 class DioInterceptor extends Interceptor {
@@ -16,8 +16,8 @@ class DioInterceptor extends Interceptor {
   DioInterceptor(this.dio);
 
   /// 요청을 보내기 전에 실행되는 메서드
-  /// 
-  /// 인증이 필요한 요청의 경우 저장된 토큰을 Authorization 헤더에 추가합니다.
+  ///
+  /// 인증이 필요한 요청의 경우 저장된 토큰을 Request Body에 추가합니다.
   @override
   void onRequest(
     RequestOptions options,
@@ -27,8 +27,12 @@ class DioInterceptor extends Interceptor {
     if (options.headers['requiresAuth'] == true) {
       final token = await TokenStorage.getAccessToken();
       if (token != null) {
-        // Bearer 토큰 형식으로 Authorization 헤더 추가
-        options.headers['Authorization'] = 'Bearer $token';
+        // Bearer 토큰 형식으로 Authorization 헤더 대신 바디에 토큰 추가
+        options.data = {
+          'accessToken': token, // 액세스 토큰을 Request Body에 포함
+        };
+        // 기존 Authorization 헤더 제거
+        options.headers.remove('Authorization');
       }
     }
     // 임시로 사용한 requiresAuth 헤더 제거
@@ -37,7 +41,7 @@ class DioInterceptor extends Interceptor {
   }
 
   /// 에러 발생 시 실행되는 메서드
-  /// 
+  ///
   /// 401 Unauthorized 에러 발생 시 토큰 갱신을 시도합니다.
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
@@ -45,7 +49,8 @@ class DioInterceptor extends Interceptor {
       // 이미 토큰 갱신 중이면 대기
       if (_isRefreshing) {
         // 현재 요청을 대기 큐에 추가
-        return _addToPendingRequests(() => _retryRequest(err.requestOptions, handler));
+        return _addToPendingRequests(
+            () => _retryRequest(err.requestOptions, handler));
       }
 
       _isRefreshing = true;
@@ -116,4 +121,4 @@ class DioInterceptor extends Interceptor {
   Future<void> _addToPendingRequests(Future Function() request) async {
     _pendingRequests.add(request);
   }
-} 
+}
