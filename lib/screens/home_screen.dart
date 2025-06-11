@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'result_map_screen.dart';
 import '../widgets/kakao_login.dart';
-import '../widgets/healthCheckButton .dart'; // HealthCheckButton을 불러옴
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,9 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
             // 카카오 로그인 버튼
             const KakaoLoginButton(),
             const SizedBox(height: 10), // 카카오 로그인 버튼과 다른 요소 간의 간격
-
-            // 서버 상태 확인 버튼 추가 (HealthCheckButton 사용)
-            const HealthCheckButton(),
 
             const SizedBox(height: 30), // 버튼과 다음 항목 간의 간격
 

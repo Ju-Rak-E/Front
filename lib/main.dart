@@ -14,7 +14,7 @@ Future<void> main() async {
 
   try {
     // .env 파일에서 환경 변수 로드
-    await dotenv.load(fileName: "assets/.env");
+    await dotenv.load(fileName: ".env");
     print(
         "✅ ENV LOADED: ${dotenv.env['KAKAO_NATIVE_APP_KEY']}"); // KAKAO_NATIVE_APP_KEY 출력
     print(
@@ -31,6 +31,7 @@ Future<void> main() async {
     print("카카오 커스텀 스킴킴: ${dotenv.env['REDIRECT_URI']}"); // 카카오 커스텀 스킴 확인
   } catch (e) {
     print("❌ Failed to load .env: $e"); // .env 파일 로드 실패 시 출력
+    print("앱에서 .env 파일을 찾을 수 없습니다. 경로와 파일 위치를 확인하세요.");
   }
 
   runApp(const MyApp()); // 앱 실행
@@ -42,8 +43,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Kakao Map + KakaoT',  // 앱 제목
-      theme: ThemeData(primarySwatch: Colors.green),  // 앱의 기본 색상 설정
+      title: 'Rmago', // 앱 제목
+      theme: ThemeData(primarySwatch: Colors.green), // 앱의 기본 색상 설정
       navigatorKey: RouteManager.navigatorKey,
       routes: {
         '/': (context) => const HomeScreen(), // 홈 화면을 설정

@@ -107,16 +107,33 @@ class _KakaoLoginButtonState extends State<KakaoLoginButton> {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: isLoggedIn || isLoading
+    return GestureDetector(
+      onTap: isLoggedIn || isLoading
           ? _logout
           : _loginWithKakao, // 로그인 상태 또는 로딩 중일 때는 로그아웃, 그 외에는 로그인
-      style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow[700]),
-      child: isLoading
-          ? const CircularProgressIndicator() // 로딩 중이면 로딩 표시
-          : Text(
-              isLoggedIn ? '로그아웃' : '카카오로 로그인',
-              style: const TextStyle(color: Colors.black),
+      child: isLoggedIn
+          ? Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              color: Colors.yellow[700], // 로그아웃 버튼 색상
+              child: const Text(
+                '로그아웃', // 로그아웃 텍스트
+                style: TextStyle(color: Colors.black, fontSize: 16),
+              ),
+            )
+          : Container(
+              width: 250, // 로그인 버튼 너비 설정
+              height: 60, // 로그인 버튼 높이 설정
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(
+                      'assets/images/kakao_login_medium.png'), // 로그인 이미지
+                  fit: BoxFit.cover, // 이미지를 버튼 크기에 맞게 채우기
+                ),
+              ),
+              child: isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator()) // 로딩 중에는 로딩 표시
+                  : null,
             ),
     );
   }
