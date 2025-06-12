@@ -48,9 +48,9 @@ class MyApp extends StatelessWidget {
       navigatorKey: RouteManager.navigatorKey,
       routes: {
         '/': (context) => const HomeScreen(), // 홈 화면을 설정
-        '/login': (context) => const LoginScreen(),
+        '/login': (context) => const LoginPage(),
       },
-      initialRoute: '/',
+      initialRoute: '/login',
     );
   }
 }
