@@ -5,7 +5,10 @@
 
 import 'package:flutter/material.dart';
 import 'result_map_screen.dart';
-import '../widgets/kakao_login.dart'; // KakaoLoginService import
+import '../widgets/kakao_login.dart';
+import 'profile_screen.dart';
+import 'about_screen.dart';
+import '../utils/menu_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,35 +36,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("홈스크린 화면"),
+        title: const Text("택시요금 계산기 + 로그인"),
         actions: [
-          // 로그인 상태에 따라 우측 상단에 로그아웃 텍스트 표시
-          kakaoLoginService.isLoggedIn
-              ? GestureDetector(
-                  onTap: () async {
-                    // 로그아웃 처리
-                    await kakaoLoginService.logout();
-                    setState(() {}); // 상태 갱신
-
-                    //로그아웃 후 로그인 페이지로 이동
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
-                  child: Container(
-                    alignment: Alignment.center,
-                    width: 60,
-                    height: 20,
-                    margin: const EdgeInsets.only(right: 10),
-                    child: const Text(
-                      '로그아웃',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                )
-              : const SizedBox.shrink(), // 로그인 안 됐을 때는 빈 공간
+          IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => showAppMenu(context, kakaoLoginService),
+          ),
         ],
       ),
       body: Padding(
