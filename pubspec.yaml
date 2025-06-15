@@ -20,5 +20,10 @@ dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/kakao_login_medium.png
+    - assets/images/splashImage.png
     - .env
+  fonts:
+    - family: BMDOHYEON
+      fonts:
+        - asset: assets/fonts/BMDOHYEON_otf.otf
+        - asset: assets/fonts/BMDOHYEON_ttf.ttf
