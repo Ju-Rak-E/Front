@@ -10,17 +10,20 @@ dependencies:
   http: ^0.13.6
   flutter:
     sdk: flutter
+  webview_flutter: ^4.4.2 # 또는 최신 안정 버전 확인
   flutter_dotenv: ^5.1.0
   url_launcher: ^6.2.1
   kakao_flutter_sdk_user: ^1.9.7+3  # null safety 지원 버전으로 변경
   dio: ^5.4.0                   # JWT 인터셉터에 활용 예정
   flutter_secure_storage: ^9.0.0  #JWT를 암호화해 안전하게 저장하는 법
   flutter_inappwebview: ^6.0.0
+  geolocator: ^10.1.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/splashImage.png
+    - assets/map/map.html
     - .env
   fonts:
     - family: BMDOHYEON
