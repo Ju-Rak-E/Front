@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/menu_utils.dart';
-import '../widgets/kakao_login.dart';
+import '../service/kakao_login_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -29,4 +29,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-} 
+}

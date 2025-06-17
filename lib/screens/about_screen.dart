@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/menu_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../widgets/kakao_login.dart';
+import '../service/kakao_login_service.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -77,51 +77,56 @@ class _AboutScreenState extends State<AboutScreen> {
                 ],
               ),
             ),
-            
+
             SizedBox(height: 40),
-            
+
             // 서비스 소개
             _buildSection(
               '🎯 서비스 소개',
               '택시비 입력 후 떠나는 랜덤 여행, 오늘의 행선지는 어디?'
-              '한 번의 요금 입력으로 당신만의 관광지, 맛집, 핫플이 쏟아진다!'
-              '운빨+추천이 결합된 신개념 여행 제안 서비스!',
+                  '한 번의 요금 입력으로 당신만의 관광지, 맛집, 핫플이 쏟아진다!'
+                  '운빨+추천이 결합된 신개념 여행 제안 서비스!',
             ),
-            
+
             SizedBox(height: 30),
-            
+
             // 사용 방법
             _buildSection(
               '📱 사용 방법',
               '',
             ),
-            
+
             _buildStepCard(1, '위치 권한 허용', '정확한 주변 맛집 추천을 위해 위치 권한을 허용해주세요.'),
             _buildStepCard(2, '예산 입력', '택시비로 지불할 금액을 입력해주세요.'),
-            _buildStepCard(3, '얼마Go 버튼 클릭', '버튼을 누르면 해당 금액으로 갈 수 있는 거리 내에 \'핫플\'을 찾아드려요.'),
+            _buildStepCard(
+                3, '얼마Go 버튼 클릭', '버튼을 누르면 해당 금액으로 갈 수 있는 거리 내에 \'핫플\'을 찾아드려요.'),
             _buildStepCard(4, '장소 클릭', '추천장소와 관련높은 장소들도 추천해드립니다!'),
-            
+
             SizedBox(height: 30),
-            
+
             // 주요 기능
             _buildSection(
               '✨ 주요 기능',
               '',
             ),
-            
-            _buildFeatureCard(Icons.location_on, '위치 기반 추천', '현재 위치 주변의 플레이스만 추천해드려요.'),
-            _buildFeatureCard(Icons.attach_money, '예산 맞춤', '입력한 예산 범위 내의 플레이스만 선별해드려요.'),
-            _buildFeatureCard(Icons.star, '평점 기반', '리뷰와 평점이 좋은 검증된 플레이스만 추천해요.'),
-            _buildFeatureCard(Icons.history, '기록 관리', '방문한 플레이스 기록을 저장하고 관리할 수 있어요.'),
-            
+
+            _buildFeatureCard(
+                Icons.location_on, '위치 기반 추천', '현재 위치 주변의 플레이스만 추천해드려요.'),
+            _buildFeatureCard(
+                Icons.attach_money, '예산 맞춤', '입력한 예산 범위 내의 플레이스만 선별해드려요.'),
+            _buildFeatureCard(
+                Icons.star, '평점 기반', '리뷰와 평점이 좋은 검증된 플레이스만 추천해요.'),
+            _buildFeatureCard(
+                Icons.history, '기록 관리', '방문한 플레이스 기록을 저장하고 관리할 수 있어요.'),
+
             SizedBox(height: 30),
-            
+
             // 향후 업데이트
             _buildSection(
               '🚀 향후 업데이트',
               '더 나은 서비스를 위해 지속적으로 업데이트하고 있습니다!',
             ),
-            
+
             Container(
               padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -140,9 +145,9 @@ class _AboutScreenState extends State<AboutScreen> {
                 ],
               ),
             ),
-            
+
             SizedBox(height: 40),
-            
+
             // 개발자 정보
             Container(
               padding: EdgeInsets.all(20),
@@ -189,9 +194,9 @@ class _AboutScreenState extends State<AboutScreen> {
                 ],
               ),
             ),
-            
+
             SizedBox(height: 20),
-            
+
             // 버전 정보
             Center(
               child: Text(
@@ -207,6 +212,7 @@ class _AboutScreenState extends State<AboutScreen> {
       ),
     );
   }
+
   Widget _buildSection(String title, String content) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,4 +434,4 @@ class _AboutScreenState extends State<AboutScreen> {
       await launchUrl(websiteUri);
     }
   }
-} 
+}
