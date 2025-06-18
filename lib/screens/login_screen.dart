@@ -17,98 +17,114 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final KakaoLoginService _kakaoLoginService = KakaoLoginService();
   final AuthService _authService = AuthService();
+  bool _mounted = true; // 위젯 마운트 상태 추적
 
-  Position? _userLocation; // 사용자의 위치 정보를 저장할 변수
-  bool _isLocationLoading = false; // 위치 정보 로딩 중 여부
-  String _locationStatusText = "위치 정보를 가져오는 중..."; // 위치 상태를 표시하는 텍스트
+  Position? _userLocation;
+  bool _isLocationLoading = false;
+  String _locationStatusText = "위치 정보를 가져오는 중...";
 
   @override
   void initState() {
     super.initState();
-    _checkAndRequestLocationPermission(); // 화면 진입 시 위치 권한 확인 및 요청
-    _checkAutoLogin(); // 자동 로그인 상태 확인
+    _initializeLoginPage();
   }
 
-  /// 앱 시작 시 저장된 JWT 토큰을 확인하여 자동 로그인 처리
-  Future<void> _checkAutoLogin() async {
-    final isLoggedIn = await _kakaoLoginService.checkLoginStatus();
-    if (isLoggedIn) {
-      // JWT가 있다면 바로 홈 화면으로 이동 시도
-      if (mounted) {
-        RouteManager.navigateToHome();
-      }
+  @override
+  void dispose() {
+    _mounted = false;
+    super.dispose();
+  }
+
+  Future<void> _initializeLoginPage() async {
+    await _checkAutoLogin();
+    if (_mounted) {
+      await _checkAndRequestLocationPermission();
     }
   }
 
-  /// 위치 권한 확인 및 현재 위치를 가져오는 함수
+  Future<void> _checkAutoLogin() async {
+    try {
+      final isLoggedIn = await _kakaoLoginService.checkLoginStatus();
+      if (isLoggedIn && _mounted) {
+        RouteManager.navigateToHome();
+      }
+    } catch (e) {
+      print('자동 로그인 확인 중 오류 발생: $e');
+    }
+  }
+
   Future<void> _checkAndRequestLocationPermission() async {
-    setState(() {
-      _isLocationLoading = true; // 로딩 시작
+    if (!_mounted) return;
+
+    _safeSetState(() {
+      _isLocationLoading = true;
       _locationStatusText = "위치 정보를 가져오는 중...";
     });
 
-    final position = await getCurrentLocation(); // `location_utils.dart`의 함수 호출
-    if (position != null) {
-      setState(() {
-        _userLocation = position; // 위치 정보 저장
-        _locationStatusText =
-            "위치 권한 획득됨: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}";
+    try {
+      final position = await getCurrentLocation();
+      if (!_mounted) return;
+
+      _safeSetState(() {
+        _userLocation = position;
+        _locationStatusText = position != null
+            ? "위치 권한 획득됨: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}"
+            : "위치 권한 거부 또는 가져오기 실패";
+        _isLocationLoading = false;
       });
-      print('위치 권한 획득 및 좌표: ${position.latitude}, ${position.longitude}');
-    } else {
-      setState(() {
-        _userLocation = null; // 위치 정보 가져오기 실패
-        _locationStatusText = "위치 권한 거부 또는 가져오기 실패";
+    } catch (e) {
+      if (!_mounted) return;
+      
+      _safeSetState(() {
+        _userLocation = null;
+        _locationStatusText = "위치 정보 가져오기 실패: ${e.toString()}";
+        _isLocationLoading = false;
       });
-      print('위치 권한 거부 또는 위치 정보 가져오기 실패');
     }
-    setState(() {
-      _isLocationLoading = false; // 로딩 종료
-    });
   }
 
-  /// 카카오 로그인 프로세스를 시작하는 함수
+  // 안전한 setState 호출을 위한 헬퍼 메서드
+  void _safeSetState(VoidCallback fn) {
+    if (_mounted && mounted) {
+      setState(fn);
+    }
+  }
+
   Future<void> _loginWithKakao() async {
-    // 위치 정보가 없거나 로딩 중이면 로그인 진행하지 않음
+    if (!_mounted) return;
+
     if (_userLocation == null && !_isLocationLoading) {
-      print('위치 정보가 없어 카카오 로그인을 진행할 수 없습니다. 다시 권한 요청을 시도합니다.');
-      await _checkAndRequestLocationPermission(); // 다시 권한 요청 시도
+      print('위치 정보 없음. 권한 재요청...');
+      await _checkAndRequestLocationPermission();
+      if (!_mounted) return;
+      
       if (_userLocation == null) {
-        // 여전히 위치 정보가 없다면 사용자에게 알림 후 로그인 중단
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('위치 권한이 필요합니다. 앱 설정을 확인해주세요.')),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('위치 권한이 필요합니다. 앱 설정을 확인해주세요.')),
+        );
         return;
       }
-    } else if (_isLocationLoading) {
-      print('위치 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요.');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('위치 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요.')),
-        );
-      }
+    }
+
+    if (_isLocationLoading) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('위치 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요.')),
+      );
       return;
     }
 
     try {
-      // KakaoLoginService를 통해 카카오 인증 수행
       await _kakaoLoginService.loginWithKakao(
         onSuccess: (kakaoAccessToken) async {
-          // 카카오 인증 성공 후, 백엔드 로그인 API 호출 시 위치 정보 전달
-          await _authService.kakaoLogin(kakaoAccessToken,
-              position: _userLocation);
-
-          // 백엔드 로그인 성공 후 홈 화면으로 이동
-          if (mounted) {
+          await _authService.kakaoLogin(kakaoAccessToken, position: _userLocation);
+          if (_mounted && mounted) {
             RouteManager.navigateToHome();
           }
         },
       );
     } catch (e) {
-      print('카카오 로그인 또는 백엔드 통신 실패: $e');
-      if (mounted) {
+      print('로그인 실패: $e');
+      if (_mounted && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('로그인 실패: ${e.toString()}')),
         );
