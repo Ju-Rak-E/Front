@@ -1,35 +1,34 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dio_interceptor.dart';
 
-/// API 요청을 처리하는 클라이언트 클래스
-/// 
-/// Dio를 사용하여 HTTP 요청을 처리하며,
-/// 인증이 필요한 요청과 필요없는 요청을 구분하여 처리합니다.
+/// API 요청을 처리하는 클라이언트 클래스 (싱글톤)
 class ApiClient {
-  late final Dio _dio;
-  // 백엔드 API의 기본 URL
-  static const String baseUrl = 'YOUR_BACKEND_API_URL'; // TODO: 실제 백엔드 API URL로 변경 필요
+  static final ApiClient _instance = ApiClient._internal();
 
-  ApiClient() {
-    // Dio 인스턴스 생성 및 기본 설정
+  factory ApiClient() {
+    return _instance;
+  }
+
+  ApiClient._internal() {
+    _baseUrl = dotenv.env['BACKEND_BASE_URL']!; // 환경 변수에서 로드
+
     _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 5),  // 연결 타임아웃
-      receiveTimeout: const Duration(seconds: 3),  // 응답 수신 타임아웃
+      baseUrl: _baseUrl, // 내부 _baseUrl 사용
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 3),
+      contentType: Headers.jsonContentType,
     ));
 
-    // 토큰 관리를 위한 인터셉터 추가
     _dio.interceptors.add(DioInterceptor(_dio));
   }
 
-  /// 인증이 필요한 API 요청을 처리하는 메서드
-  /// 
-  /// [path] API 엔드포인트 경로
-  /// [method] HTTP 메서드 (기본값: 'GET')
-  /// [data] 요청 본문 데이터
-  /// [queryParameters] URL 쿼리 파라미터
-  /// 
-  /// Returns: API 응답
+  late final Dio _dio;
+  late final String _baseUrl; // <<<<<< 이 부분 추가: baseUrl을 private 변수로 선언
+
+  // <<<<<< 이 부분 추가: baseUrl에 대한 public getter >>>>>
+  String get baseUrl => _baseUrl;
+
   Future<Response> authenticatedRequest(
     String path, {
     String method = 'GET',
@@ -42,19 +41,11 @@ class ApiClient {
       queryParameters: queryParameters,
       options: Options(
         method: method,
-        headers: {'requiresAuth': true},  // 인터셉터에서 토큰 추가를 위한 플래그
+        headers: {'requiresAuth': true},
       ),
     );
   }
 
-  /// 인증이 필요없는 API 요청을 처리하는 메서드
-  /// 
-  /// [path] API 엔드포인트 경로
-  /// [method] HTTP 메서드 (기본값: 'GET')
-  /// [data] 요청 본문 데이터
-  /// [queryParameters] URL 쿼리 파라미터
-  /// 
-  /// Returns: API 응답
   Future<Response> publicRequest(
     String path, {
     String method = 'GET',
@@ -68,4 +59,4 @@ class ApiClient {
       options: Options(method: method),
     );
   }
-} 
+}

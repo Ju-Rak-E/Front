@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'token_storage.dart';
 import 'route_manager.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Dio HTTP 클라이언트의 인터셉터
 ///
@@ -8,116 +9,132 @@ import 'route_manager.dart';
 /// 토큰 만료 시 자동으로 갱신을 시도합니다.
 class DioInterceptor extends Interceptor {
   final Dio dio;
-  // 토큰 갱신 중인지 확인하는 플래그
-  bool _isRefreshing = false;
-  // 토큰 갱신 대기 중인 요청들을 저장하는 큐
-  final List<Future Function()> _pendingRequests = [];
+  bool _isRefreshing = false; // 토큰 갱신 중인지 여부를 확인하는 플래그
+  final List<Future Function()> _pendingRequests =
+      []; // 토큰 갱신 대기 중인 요청들을 저장하는 큐
 
   DioInterceptor(this.dio);
 
-  /// 요청을 보내기 전에 실행되는 메서드
-  ///
-  /// 인증이 필요한 요청의 경우 저장된 토큰을 Request Body에 추가합니다.
   @override
   void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
-    // requiresAuth 헤더가 true인 경우에만 토큰 추가
-    if (options.headers['requiresAuth'] == true) {
+      RequestOptions options, RequestInterceptorHandler handler) async {
+    // 인증이 필요한 요청에만 토큰 추가
+    if (_requiresAuth(options)) {
       final token = await TokenStorage.getAccessToken();
       if (token != null) {
-        // Bearer 토큰 형식으로 Authorization 헤더 대신 바디에 토큰 추가
-        options.data = {
-          'accessToken': token, // 액세스 토큰을 Request Body에 포함
-        };
-        // 기존 Authorization 헤더 제거
-        options.headers.remove('Authorization');
+        _addAuthHeader(options, token);
       }
     }
-    // 임시로 사용한 requiresAuth 헤더 제거
-    options.headers.remove('requiresAuth');
     return handler.next(options);
   }
 
-  /// 에러 발생 시 실행되는 메서드
-  ///
-  /// 401 Unauthorized 에러 발생 시 토큰 갱신을 시도합니다.
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
-      // 이미 토큰 갱신 중이면 대기
+    // 401 또는 403 오류 발생 시 토큰 갱신 시도
+    if (_shouldRefreshToken(err)) {
       if (_isRefreshing) {
-        // 현재 요청을 대기 큐에 추가
+        // 현재 토큰 갱신 중이면 요청을 대기 큐에 추가
         return _addToPendingRequests(
             () => _retryRequest(err.requestOptions, handler));
       }
 
       _isRefreshing = true;
-
-      try {
-        final refreshToken = await TokenStorage.getRefreshToken();
-        if (refreshToken != null) {
-          // 리프레시 토큰으로 새로운 토큰 발급 요청
-          final response = await dio.post(
-            '/auth/refresh', // 백엔드의 토큰 갱신 엔드포인트
-            data: {'refresh_token': refreshToken},
-          );
-
-          if (response.statusCode == 200) {
-            // 새로운 액세스 토큰과 리프레시 토큰을 안전한 저장소에 저장
-            await TokenStorage.saveTokens(
-              accessToken: response.data['access_token'],
-              refreshToken: response.data['refresh_token'], // 새로운 리프레시 토큰
-            );
-
-            // 대기 중인 모든 요청 재시도
-            for (var request in _pendingRequests) {
-              await request();
-            }
-            _pendingRequests.clear();
-
-            // 현재 실패한 요청 재시도
-            return _retryRequest(err.requestOptions, handler);
-          }
-        }
-      } catch (e) {
-        // 토큰 갱신 실패 시 로그아웃 처리
-        await TokenStorage.deleteTokens();
-        // 로그인 화면으로 이동
-        await RouteManager.navigateToLogin();
-      } finally {
-        _isRefreshing = false;
-      }
+      await _refreshToken(err.requestOptions, handler);
+    } else {
+      return handler.next(err);
     }
-    return handler.next(err);
   }
 
-  /// 실패한 요청을 재시도하는 메서드
-  Future<void> _retryRequest(
-    RequestOptions requestOptions,
-    ErrorInterceptorHandler handler,
-  ) async {
+  // 인증이 필요한 요청인지 확인
+  bool _requiresAuth(RequestOptions options) {
+    return options.headers['requiresAuth'] == true;
+  }
+
+  // Authorization 헤더 추가
+  void _addAuthHeader(RequestOptions options, String token) {
+    options.headers['Authorization'] = 'Bearer $token';
+  }
+
+  // 토큰 갱신이 필요한 오류인지 확인 (401 또는 403)
+  bool _shouldRefreshToken(DioException err) {
+    return err.response?.statusCode == 401 || err.response?.statusCode == 403;
+  }
+
+  // 토큰 갱신을 처리하는 메서드
+  Future<void> _refreshToken(
+      RequestOptions failedRequest, ErrorInterceptorHandler handler) async {
     try {
-      final retryResponse = await dio.request(
-        requestOptions.path,
-        options: Options(
-          method: requestOptions.method,
-          headers: requestOptions.headers,
-        ),
-        data: requestOptions.data,
-        queryParameters: requestOptions.queryParameters,
-      );
+      final refreshToken = await TokenStorage.getRefreshToken();
+      if (refreshToken != null) {
+        final newTokens = await _getNewTokens(refreshToken);
+        if (newTokens != null) {
+          await _saveTokens(newTokens);
+          _retryPendingRequests();
+          return _retryRequest(failedRequest, handler);
+        }
+      }
+    } catch (e) {
+      await _handleTokenRefreshFailure(e);
+      return handler
+          .next(DioException(requestOptions: failedRequest, error: e));
+    } finally {
+      _isRefreshing = false;
+    }
+  }
+
+  // 리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 발급받는 메서드
+  Future<Map<String, dynamic>?> _getNewTokens(String refreshToken) async {
+    final refreshDio = Dio();
+    final response = await refreshDio.post(
+      '${dotenv.env['BACKEND_BASE_URL']!}/customer/reissue',
+      data: {'refreshToken': refreshToken},
+    );
+
+    if (response.statusCode == 200) {
+      return {
+        'accessToken': response.data['accessToken'],
+        'refreshToken': response.data['refreshToken'],
+      };
+    }
+    return null;
+  }
+
+  // 새로운 토큰을 안전한 저장소에 저장
+  Future<void> _saveTokens(Map<String, dynamic> tokens) async {
+    await TokenStorage.saveTokens(
+      accessToken: tokens['accessToken'],
+      refreshToken: tokens['refreshToken'],
+    );
+  }
+
+  // 대기 중인 요청을 재시도하는 메서드
+  Future<void> _retryRequest(
+      RequestOptions requestOptions, ErrorInterceptorHandler handler) async {
+    try {
+      final retryResponse = await dio.fetch(requestOptions);
       return handler.resolve(retryResponse);
     } catch (e) {
-      return handler.next(DioException(
-        requestOptions: requestOptions,
-        error: e,
-      ));
+      return handler
+          .next(DioException(requestOptions: requestOptions, error: e));
     }
   }
 
-  /// 대기 중인 요청 큐에 요청을 추가하는 메서드
+  // 대기 중인 요청들을 재시도
+  Future<void> _retryPendingRequests() async {
+    for (var request in _pendingRequests) {
+      await request();
+    }
+    _pendingRequests.clear();
+  }
+
+  // 토큰 갱신 실패 시 처리
+  Future<void> _handleTokenRefreshFailure(dynamic e) async {
+    print('토큰 갱신 실패: $e');
+    await TokenStorage.deleteTokens();
+    await RouteManager.navigateToLogin();
+  }
+
+  // 대기 큐에 요청 추가
   Future<void> _addToPendingRequests(Future Function() request) async {
     _pendingRequests.add(request);
   }
