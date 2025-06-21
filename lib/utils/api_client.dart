@@ -42,6 +42,7 @@ class ApiClient {
       options: Options(
         method: method,
         headers: {'requiresAuth': true},
+        extra: {'requiresAuth': true},
       ),
     );
   }
