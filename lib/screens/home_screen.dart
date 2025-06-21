@@ -11,7 +11,7 @@ import '../service/kakao_login_service.dart'; // KakaoLoginService 임포트
 import '../utils/route_manager.dart'; // RouteManager 임포트
 import '../utils/menu_utils.dart'; // menu_utils 임포트 (showAppMenu 함수)
 import 'result_map_screen.dart'; // ResultMapScreen 임포트
-import 'kakao_map_screen.dart'; // KakaoMapScreen
+import 'naver_map_screen.dart'; //
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // ✅ 지도 영역 (KakaoMapScreen)
           const Flexible(
             flex: 8,
-            child: KakaoMapScreen(),
+            child: NaverMapScreen(),
           ),
 
           // ✅ 금액 입력 UI (스크롤 가능)
