@@ -71,6 +71,7 @@ class AuthService {
           'areaCd': areaCd,
           'signguCd': signguCd,
         },
+        extra: {'requiresAuth': true},
       );
       print('[✅ 관광지 조회 성공] ${response.data}');
       return response;
@@ -102,6 +103,7 @@ class AuthService {
           'longitude': longitude,
           'fare': fare,
         },
+        extra: {'requiresAuth': true},
       );
 
       print('[✅ 반경 조회 성공] ${response.data}');
@@ -109,7 +111,10 @@ class AuthService {
     } on DioException catch (e) {
       print('[❌ 반경 조회 실패] DioException: ${e.message}');
       if (e.response != null) {
-        print('[📥 서버 응답] ${e.response!.data}');
+        print('[📥 서버 응답] 상태코드: ${e.response?.statusCode}');
+        print('[📥 응답 데이터] ${e.response!.data}');
+      } else {
+        print('[🚫 응답 없음] 네트워크 문제 또는 dio.fetch 중단');
       }
       throw Exception('Failed to estimate radius: ${e.message}');
     }

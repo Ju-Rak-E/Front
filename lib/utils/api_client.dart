@@ -34,6 +34,7 @@ class ApiClient {
     String method = 'GET',
     Map<String, dynamic>? data,
     Map<String, dynamic>? queryParameters,
+    required Map<String, bool> extra,
   }) async {
     return await _dio.request(
       path,
