@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../utils/location_utils.dart'; // getCurrentLocation 함수
-
 class NaverMapScreen extends StatefulWidget {
   const NaverMapScreen({super.key});
+
+  static _NaverMapScreenState? _mapState;
+
+  static void updateRadiusExternally({
+    required double lat,
+    required double lng,
+    required double radius,
+  }) {
+    _mapState?._updateRadiusExternally(lat, lng, radius);
+  }
 
   @override
   State<NaverMapScreen> createState() => _NaverMapScreenState();
@@ -14,110 +21,126 @@ class NaverMapScreen extends StatefulWidget {
 
 class _NaverMapScreenState extends State<NaverMapScreen> {
   late NaverMapController _mapController;
-  NLatLng _currentLatLng = const NLatLng(37.5665, 126.9780); // 기본 위치: 서울
+  NLatLng _currentLatLng = const NLatLng(37.5665, 126.9780);
   NMarker? _myLocationMarker;
+  NCircleOverlay? _radiusCircle;
   bool _isMapReady = false;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => _initLocationAndMarker());
+    NaverMapScreen._mapState = this;
+    Future.microtask(() => _initializeLocation());
   }
 
-  Future<bool> ensureLocationPermission() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+  Future<void> _initializeLocation() async {
+    final permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      await Geolocator.requestPermission();
     }
-    if (permission == LocationPermission.deniedForever ||
-        permission == LocationPermission.denied) {
-      return false;
-    }
-    return true;
-  }
 
-  Future<Position?> getCurrentLocationIfPermitted() async {
-    bool permitted = await ensureLocationPermission();
-    if (!permitted) return null;
-    return await Geolocator.getCurrentPosition(
+    final position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
       timeLimit: const Duration(seconds: 10),
     );
+
+    _currentLatLng = NLatLng(position.latitude, position.longitude);
+
+    _myLocationMarker = NMarker(
+      id: 'my_location',
+      position: _currentLatLng,
+      caption: const NOverlayCaption(text: '📍 내 위치'),
+    );
+
+    if (_isMapReady) {
+      _moveCameraToCurrent();
+      _mapController.addOverlay(_myLocationMarker!);
+    }
+
+    setState(() {});
   }
 
-  Future<void> _initLocationAndMarker() async {
-    final position = await getCurrentLocationIfPermitted();
+  void _moveCameraToCurrent() {
+    _mapController.updateCamera(
+      NCameraUpdate.scrollAndZoomTo(
+        target: _currentLatLng,
+        zoom: 14,
+      ),
+    );
+  }
 
-    if (position != null) {
-      _currentLatLng = NLatLng(position.latitude, position.longitude);
-      _myLocationMarker = NMarker(
-        id: 'my_location',
-        position: _currentLatLng,
-        caption: const NOverlayCaption(text: '📍 내 위치'),
-      );
-      setState(() {}); // 위치 설정 후 UI 갱신
+  void _updateRadiusExternally(double lat, double lng, double radius) {
+    _currentLatLng = NLatLng(lat, lng);
+    final circle = NCircleOverlay(
+      id: 'estimated_radius',
+      center: _currentLatLng,
+      radius: radius,
+      color: Colors.green.withOpacity(0.3),
+      outlineColor: Colors.green,
+      outlineWidth: 2,
+    );
+
+    _mapController.clearOverlays();
+    if (_myLocationMarker != null) {
+      _mapController.addOverlay(_myLocationMarker!);
     }
+    _mapController.addOverlay(circle);
+    _moveCameraToCurrent();
+
+    setState(() {
+      _radiusCircle = circle;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          NaverMap(
-            options: NaverMapViewOptions(
-              initialCameraPosition: NCameraPosition(
-                target: _currentLatLng,
-                zoom: 14,
-              ),
-              locationButtonEnable: true,
-              scaleBarEnable: true,
-              // zoomControlEnable: true, // ❌ 1.3.1에는 없음
+    return Stack(
+      children: [
+        NaverMap(
+          options: NaverMapViewOptions(
+            initialCameraPosition: NCameraPosition(
+              target: _currentLatLng,
+              zoom: 14,
             ),
-            onMapReady: (controller) {
-              _mapController = controller;
-              setState(() {
-                _isMapReady = true;
-              });
-
-              if (_myLocationMarker != null) {
-                _mapController.addOverlay(_myLocationMarker!); // ✅ 내 위치 마커 추가
-              }
-            },
+            locationButtonEnable: true,
+            scaleBarEnable: true,
           ),
-
-          // ✅ 로딩 인디케이터
-          if (!_isMapReady) const Center(child: CircularProgressIndicator()),
-
-          // ✅ 확대/축소 버튼
-          if (_isMapReady)
-            Positioned(
-              bottom: 60,
-              right: 10,
-              child: Column(
-                children: [
-                  FloatingActionButton(
-                    heroTag: "zoom_in",
-                    mini: true,
-                    onPressed: () {
-                      _mapController.updateCamera(NCameraUpdate.zoomIn());
-                    },
-                    child: const Icon(Icons.add),
-                  ),
-                  const SizedBox(height: 10),
-                  FloatingActionButton(
-                    heroTag: "zoom_out",
-                    mini: true,
-                    onPressed: () {
-                      _mapController.updateCamera(NCameraUpdate.zoomOut());
-                    },
-                    child: const Icon(Icons.remove),
-                  ),
-                ],
-              ),
+          onMapReady: (controller) {
+            _mapController = controller;
+            _isMapReady = true;
+            if (_myLocationMarker != null) {
+              _mapController.addOverlay(_myLocationMarker!);
+              _moveCameraToCurrent();
+            }
+            setState(() {});
+          },
+        ),
+        if (_isMapReady)
+          Positioned(
+            bottom: 60,
+            right: 10,
+            child: Column(
+              children: [
+                FloatingActionButton(
+                  heroTag: "zoom_in",
+                  mini: true,
+                  onPressed: () =>
+                      _mapController.updateCamera(NCameraUpdate.zoomIn()),
+                  child: const Icon(Icons.add),
+                ),
+                const SizedBox(height: 10),
+                FloatingActionButton(
+                  heroTag: "zoom_out",
+                  mini: true,
+                  onPressed: () =>
+                      _mapController.updateCamera(NCameraUpdate.zoomOut()),
+                  child: const Icon(Icons.remove),
+                ),
+              ],
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
