@@ -24,8 +24,29 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
     Future.microtask(() => _initLocationAndMarker());
   }
 
+  Future<bool> ensureLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever ||
+        permission == LocationPermission.denied) {
+      return false;
+    }
+    return true;
+  }
+
+  Future<Position?> getCurrentLocationIfPermitted() async {
+    bool permitted = await ensureLocationPermission();
+    if (!permitted) return null;
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+      timeLimit: const Duration(seconds: 10),
+    );
+  }
+
   Future<void> _initLocationAndMarker() async {
-    final position = await getCurrentLocation();
+    final position = await getCurrentLocationIfPermitted();
 
     if (position != null) {
       _currentLatLng = NLatLng(position.latitude, position.longitude);

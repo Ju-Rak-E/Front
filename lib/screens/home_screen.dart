@@ -6,6 +6,7 @@ import '../utils/route_manager.dart';
 import '../utils/menu_utils.dart';
 import 'naver_map_screen.dart';
 import '../utils/location_utils.dart'; // 위치 가져오기 유틸
+import '../service/taxi_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,35 +59,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     try {
-      final response = await _authService.estimateRadius(
+      final double? radius = await TaxiService.fetchRadius(
         latitude: _myLat!,
         longitude: _myLng!,
         fare: amount,
       );
 
-      final double radius = response.data['radiusInMeters'];
-      setState(() {
-        _tourAreaResult = "💡 약 ${radius.toStringAsFixed(1)}m 반경까지 이동 가능";
-        _places = []; // 아직 장소 API 없음
-      });
-
-      // TODO: 반경 기반 장소 조회 API 완성 시 여기에 호출 추가
-      /*
-      final placesResponse = await _apiClient.authenticatedRequest(
-        '/api/tour/area-in-radius',
-        method: 'GET',
-        queryParameters: {
-          'lat': _myLat!,
-          'lng': _myLng!,
-          'radius': radius,
-        },
-      );
-      final List<Map<String, dynamic>> result =
-          List<Map<String, dynamic>>.from(placesResponse.data);
-      setState(() {
-        _places = result;
-      });
-      */
+      if (radius != null) {
+        setState(() {
+          _tourAreaResult = "💡 약 "+radius.toStringAsFixed(1)+"m 반경까지 이동 가능";
+          _places = []; // 장소 리스트는 추후 확장
+        });
+      } else {
+        setState(() {
+          _tourAreaResult = "❌ 반경 계산 실패";
+          _places = [];
+        });
+      }
     } catch (e) {
       setState(() {
         _tourAreaResult = "❌ 조회 실패: $e";
