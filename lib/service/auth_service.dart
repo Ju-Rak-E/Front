@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart'; // Position 타입 사용을 위해 임포트
 import '../utils/api_client.dart'; // ApiClient 임포트 (수정됨)
 import '../utils/token_storage.dart'; // TokenStorage 임포트
+import '../service/taxi_service.dart';
 
 //최초 작성자: 김병훈
 //최초 작성일 : 2025-06-06
@@ -78,45 +79,6 @@ class AuthService {
     } on DioException catch (e) {
       print('[❌ 관광지 조회 실패] ${e.message}');
       throw Exception('Tour area fetch failed');
-    }
-  }
-
-  /// ✅ 택시 요금 기반 반경 조회 (중요: 인증 필요)
-  Future<Response> estimateRadius({
-    required double latitude,
-    required double longitude,
-    required int fare,
-  }) async {
-    try {
-      // 로그로 요청 정보 확인
-      print('[📡 반경 요청] lat: $latitude, lng: $longitude, fare: $fare');
-
-      // 토큰 확인 로그 추가
-      final token = await TokenStorage.getAccessToken();
-      print('[🔑 현재 저장된 액세스 토큰] $token');
-
-      final response = await _apiClient.authenticatedRequest(
-        '/api/taxi/estimate-radius',
-        method: 'POST',
-        data: {
-          'latitude': latitude,
-          'longitude': longitude,
-          'fare': fare,
-        },
-        extra: {'requiresAuth': true},
-      );
-
-      print('[✅ 반경 조회 성공] ${response.data}');
-      return response;
-    } on DioException catch (e) {
-      print('[❌ 반경 조회 실패] DioException: ${e.message}');
-      if (e.response != null) {
-        print('[📥 서버 응답] 상태코드: ${e.response?.statusCode}');
-        print('[📥 응답 데이터] ${e.response!.data}');
-      } else {
-        print('[🚫 응답 없음] 네트워크 문제 또는 dio.fetch 중단');
-      }
-      throw Exception('Failed to estimate radius: ${e.message}');
     }
   }
 }
