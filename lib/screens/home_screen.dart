@@ -34,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadMyLocation() async {
     final position = await getCurrentLocation();
     if (position != null) {
+      if (!mounted) return; // 👉 위젯이 dispose되었으면 중단
       setState(() {
         _myLat = position.latitude;
         _myLng = position.longitude;
@@ -99,6 +100,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
+              onSubmitted: (_) {
+                //키보드만 내리게(검색 아님)
+                FocusScope.of(context).unfocus();
+              },
               decoration: const InputDecoration(
                 labelText: "금액 입력 (예: 10000)",
                 border: OutlineInputBorder(),
@@ -109,7 +114,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(width: 10),
           ElevatedButton(
-            onPressed: _searchPlaces,
+            onPressed: () async {
+              // ✅ 1. 키보드 내리기 (포커스 해제)
+              FocusScope.of(context).unfocus();
+
+              // ✅ 2. 약간의 시간 기다려서 키보드 내려가게
+              await Future.delayed(const Duration(milliseconds: 300));
+
+              // ✅ 3. 검색 실행
+              _searchPlaces();
+            },
             child: const Text("검색"),
           ),
         ],

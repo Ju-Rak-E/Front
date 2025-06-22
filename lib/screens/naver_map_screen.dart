@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'dart:math';
 
 class NaverMapScreen extends StatefulWidget {
   const NaverMapScreen({super.key});
@@ -72,6 +73,7 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
 
   void _updateRadiusExternally(double lat, double lng, double radius) {
     _currentLatLng = NLatLng(lat, lng);
+
     final circle = NCircleOverlay(
       id: 'estimated_radius',
       center: _currentLatLng,
@@ -86,7 +88,25 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
       _mapController.addOverlay(_myLocationMarker!);
     }
     _mapController.addOverlay(circle);
-    _moveCameraToCurrent();
+
+    const earthRadius = 6371000.0;
+    final angularDistance = radius / earthRadius;
+
+    final minLat = lat - (angularDistance * 180 / pi);
+    final maxLat = lat + (angularDistance * 180 / pi);
+    final minLng = lng - (angularDistance * 180 / pi) / cos(lat * pi / 180);
+    final maxLng = lng + (angularDistance * 180 / pi) / cos(lat * pi / 180);
+
+    final bounds = NLatLngBounds(
+      southWest: NLatLng(minLat, minLng),
+      northEast: NLatLng(maxLat, maxLng),
+    );
+
+    final cameraUpdate = NCameraUpdate.fitBounds(
+      bounds,
+      padding: const EdgeInsets.all(50), // 수정된 부분
+    );
+    _mapController.updateCamera(cameraUpdate);
 
     setState(() {
       _radiusCircle = circle;
