@@ -72,6 +72,7 @@ class AuthService {
           'areaCd': areaCd,
           'signguCd': signguCd,
         },
+        extra: {'requiresAuth': true},
       );
       print('[✅ 관광지 조회 성공] ${response.data}');
       return response;

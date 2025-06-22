@@ -22,9 +22,15 @@ class DioInterceptor extends Interceptor {
     if (_requiresAuth(options)) {
       final token = await TokenStorage.getAccessToken();
       if (token != null) {
+        print('[✅ 인증 요청 감지] Authorization 추가 중');
         _addAuthHeader(options, token);
+      } else {
+        print('[⚠️ 인증 요청이지만 토큰 없음]');
       }
+    } else {
+      print('[ℹ️ 인증 불필요 요청]');
     }
+
     return handler.next(options);
   }
 
@@ -74,6 +80,7 @@ class DioInterceptor extends Interceptor {
           failedRequest.headers['Authorization'] = 'Bearer $retryToken';
 
           final retryResponse = await dio.fetch(failedRequest);
+          print('[🔁 재요청 성공] 응답 데이터: ${retryResponse.data}');
           return handler.resolve(retryResponse);
         }
       }
@@ -133,10 +140,13 @@ class DioInterceptor extends Interceptor {
       if (_requiresAuth(requestOptions) && token != null) {
         requestOptions.headers['Authorization'] = 'Bearer $token';
       }
-
+      print('[🔁 요청 재시도 중]: ${requestOptions.path}');
       final retryResponse = await dio.fetch(requestOptions);
+      print('[✅ 요청 재시도 성공]: ${retryResponse.statusCode}');
       return handler.resolve(retryResponse);
-    } catch (e) {
+    } catch (e, stack) {
+      print('[❌ 요청 재시도 실패]: $e');
+      print(stack);
       return handler
           .next(DioException(requestOptions: requestOptions, error: e));
     }
