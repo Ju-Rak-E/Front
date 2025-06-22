@@ -7,7 +7,7 @@ import '../utils/menu_utils.dart';
 import 'naver_map_screen.dart';
 import '../utils/location_utils.dart';
 import '../service/taxi_service.dart';
-import '../service/naverMap_service.dart'; // ✅ 네이버 reverse geocoding
+import '../service/naver_map_service.dart'; // ✅ 네이버 reverse geocoding
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

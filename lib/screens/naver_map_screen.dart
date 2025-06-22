@@ -13,6 +13,8 @@ class NaverMapScreen extends StatefulWidget {
     required double lng,
     required double radius,
   }) {
+    print(
+        "📍 updateRadiusExternally() 호출됨: lat=$lat, lng=$lng, radius=$radius");
     _mapState?._updateRadiusExternally(lat, lng, radius);
   }
 
@@ -72,6 +74,7 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
   }
 
   void _updateRadiusExternally(double lat, double lng, double radius) {
+    print("✅ updateRadiusExternally called with: $lat, $lng, $radius");
     _currentLatLng = NLatLng(lat, lng);
 
     final circle = NCircleOverlay(
@@ -84,9 +87,11 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
     );
 
     _mapController.clearOverlays();
+
     if (_myLocationMarker != null) {
       _mapController.addOverlay(_myLocationMarker!);
     }
+
     _mapController.addOverlay(circle);
 
     const earthRadius = 6371000.0;
@@ -104,7 +109,7 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
 
     final cameraUpdate = NCameraUpdate.fitBounds(
       bounds,
-      padding: const EdgeInsets.all(50), // 수정된 부분
+      padding: const EdgeInsets.all(50),
     );
     _mapController.updateCamera(cameraUpdate);
 
