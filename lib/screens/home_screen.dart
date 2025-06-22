@@ -7,6 +7,7 @@ import '../utils/menu_utils.dart';
 import 'naver_map_screen.dart';
 import '../utils/location_utils.dart';
 import '../service/taxi_service.dart';
+import '../service/naverMap_service.dart'; // ✅ 네이버 reverse geocoding
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,8 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadMyLocation() async {
     final position = await getCurrentLocation();
-    if (position != null) {
-      if (!mounted) return; // 👉 위젯이 dispose되었으면 중단
+    if (position != null && mounted) {
       setState(() {
         _myLat = position.latitude;
         _myLng = position.longitude;
@@ -45,21 +45,37 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _searchPlaces() async {
     final amount = int.tryParse(amountController.text);
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("유효한 금액을 입력하세요.")),
-      );
+      _showSnackBar("유효한 금액을 입력하세요.");
       return;
     }
 
     if (_myLat == null || _myLng == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("현재 위치를 확인할 수 없습니다.")),
-      );
+      _showSnackBar("현재 위치를 확인할 수 없습니다.");
       return;
     }
 
     try {
-      final double? radius = await TaxiService.fetchRadius(
+      // ✅ 1. 지역코드 조회 (실패해도 계속 진행)
+      try {
+        final region = await NaverMapService.getRegionCodes(
+          latitude: _myLat!,
+          longitude: _myLng!,
+        );
+
+        if (region != null) {
+          final areaCd = region['areaCd'];
+          final sigunguCd = region['sigunguCd'];
+          print('🎯 관광공사 지역코드: areaCd = $areaCd / sigunguCd = $sigunguCd');
+          // 👉 관광공사 API 요청 여기에 넣어도 OK
+        } else {
+          print('❌ 지역코드 결과가 null입니다.');
+        }
+      } catch (e) {
+        print('❌ 지역코드 조회 중 오류: $e');
+      }
+
+      // ✅ 2. 반경 계산 및 지도 표시
+      final radius = await TaxiService.fetchRadius(
         latitude: _myLat!,
         longitude: _myLng!,
         fare: amount,
@@ -71,7 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _places = [];
         });
 
-        // NaverMapScreen에 반경 표시 요청
         NaverMapScreen.updateRadiusExternally(
           lat: _myLat!,
           lng: _myLng!,
@@ -84,11 +99,17 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     } catch (e) {
+      print('❌ _searchPlaces 전체 예외: $e');
       setState(() {
         _tourAreaResult = "❌ 조회 실패: $e";
         _places = [];
       });
     }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildInputSection() {
@@ -101,8 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
               controller: amountController,
               keyboardType: TextInputType.number,
               onSubmitted: (_) {
-                //키보드만 내리게(검색 아님)
-                FocusScope.of(context).unfocus();
+                FocusScope.of(context).unfocus(); // 키보드만 내리기
               },
               decoration: const InputDecoration(
                 labelText: "금액 입력 (예: 10000)",
@@ -115,13 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 10),
           ElevatedButton(
             onPressed: () async {
-              // ✅ 1. 키보드 내리기 (포커스 해제)
               FocusScope.of(context).unfocus();
-
-              // ✅ 2. 약간의 시간 기다려서 키보드 내려가게
               await Future.delayed(const Duration(milliseconds: 300));
-
-              // ✅ 3. 검색 실행
               _searchPlaces();
             },
             child: const Text("검색"),
@@ -151,14 +166,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return Column(
             children: [
-              SizedBox(
-                height: mapHeight,
-                child: const NaverMapScreen(),
-              ),
-              SizedBox(
-                height: inputHeight,
-                child: _buildInputSection(),
-              ),
+              SizedBox(height: mapHeight, child: const NaverMapScreen()),
+              SizedBox(height: inputHeight, child: _buildInputSection()),
             ],
           );
         },
