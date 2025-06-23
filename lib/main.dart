@@ -20,6 +20,8 @@ Future<void> main() async {
     print("KAKAO_NATIVE_APP_KEY: ${dotenv.env['KAKAO_NATIVE_APP_KEY']}");
     print("REDIRECT_URI: ${dotenv.env['REDIRECT_URI']}");
     print("BACKEND_BASE_URL: ${dotenv.env['BACKEND_BASE_URL']}");
+    print("NAVER_MAP_SECRET_KEY: ${dotenv.env['NAVER_MAP_SECRET_KEY']}");
+    print("NAVER_MAP_CLIENT_ID: ${dotenv.env['NAVER_MAP_CLIENT_ID']}");
 
     // ✅ NaverMap 초기화
     await FlutterNaverMap().init(
