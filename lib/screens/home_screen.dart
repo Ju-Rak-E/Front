@@ -42,10 +42,39 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  int getCurrentBaseFare() {
+    final now = DateTime.now();
+    final hour = now.hour;
+
+    if (hour >= 23 || hour < 2) {
+      return 6700;
+    }
+    if (hour >= 2 && hour < 4) {
+      return 5800;
+    }
+    if (hour >= 22 && hour < 23) {
+      return 5800;
+    }
+    return 4800;
+  }
+
   Future<void> _searchPlaces() async {
     final amount = int.tryParse(amountController.text);
     if (amount == null || amount <= 0) {
-      _showSnackBar("유효한 금액을 입력하세요.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("유효한 금액을 입력하세요.")),
+      );
+      return;
+    }
+
+    final baseFare = getCurrentBaseFare();
+    if (amount < baseFare) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("기본 요금 ${baseFare.toString()}원 이상 가능합니다!"),
+          duration: Duration(seconds: 1.5),
+        ),
+      );
       return;
     }
 
