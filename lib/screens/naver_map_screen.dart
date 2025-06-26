@@ -81,7 +81,8 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
     );
   }
 
-  void _updateRadiusExternally(double lat, double lng, double radius, String category) async {
+  void _updateRadiusExternally(
+      double lat, double lng, double radius, String category) async {
     _currentLatLng = NLatLng(lat, lng);
 
     final circle = NCircleOverlay(
@@ -129,7 +130,7 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
         lat: lat,
         lng: lng,
         radius: radius / 1000,
-        category:category,
+        category: category,
       );
 
       for (final marker in markers) {

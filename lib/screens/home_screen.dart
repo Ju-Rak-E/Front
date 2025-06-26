@@ -9,7 +9,7 @@ import '../utils/menu_utils.dart';
 import 'naver_map_screen.dart';
 import '../utils/location_utils.dart';
 import '../service/taxi_service.dart';
-import '../service/naver_map_service.dart'; // ✅ 네이버 reverse geocoding
+import '../service/naver_map_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -61,35 +61,22 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final hour = now.hour;
 
-    if (hour >= 23 || hour < 2) {
-      return 6700;
-    }
-    if (hour >= 2 && hour < 4) {
-      return 5800;
-    }
-    if (hour >= 22 && hour < 23) {
-      return 5800;
-    }
+    if (hour >= 23 || hour < 2) return 6700;
+    if (hour >= 2 && hour < 4) return 5800;
+    if (hour >= 22 && hour < 23) return 5800;
     return 4800;
   }
 
   Future<void> _searchPlaces() async {
     final amount = int.tryParse(amountController.text);
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("유효한 금액을 입력하세요.")),
-      );
+      _showSnackBar("유효한 금액을 입력하세요.");
       return;
     }
 
     final baseFare = getCurrentBaseFare();
     if (amount < baseFare) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("기본 요금 ${baseFare.toString()}원 이상 가능합니다!"),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      _showSnackBar("기본 요금 ${baseFare.toString()}원 이상 가능합니다!");
       return;
     }
 
@@ -99,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     try {
-      // ✅ 1. 지역코드 조회 (실패해도 계속 진행)
+      // ✅ 지역코드 조회
       try {
         final region = await NaverMapService.getRegionCodes(
           latitude: _myLat!,
@@ -110,7 +97,6 @@ class _HomeScreenState extends State<HomeScreen> {
           final areaCd = region['areaCd'];
           final sigunguCd = region['sigunguCd'];
           print('🎯 관광공사 지역코드: areaCd = $areaCd / sigunguCd = $sigunguCd');
-          // 👉 관광공사 API 요청 여기에 넣어도 OK
         } else {
           print('❌ 지역코드 결과가 null입니다.');
         }
@@ -118,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
         print('❌ 지역코드 조회 중 오류: $e');
       }
 
-      // ✅ 2. 반경 계산 및 지도 표시
+      // ✅ 반경 계산 및 지도 표시
       final radius = await TaxiService.fetchRadius(
         latitude: _myLat!,
         longitude: _myLng!,
@@ -132,14 +118,12 @@ class _HomeScreenState extends State<HomeScreen> {
           _places = [];
         });
 
-        // ✅ 관광지 요청 실행 (이 줄만 추가하면 됨!)
         await TourService.fetchTourSpotsWithinRadius(
           centerLat: _myLat!,
           centerLng: _myLng!,
           radiusInMeters: radius,
         );
 
-        // ⭕ 지도 반경 표시
         NaverMapScreen.updateRadiusExternally(
           lat: _myLat!,
           lng: _myLng!,
@@ -170,7 +154,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -179,14 +162,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: TextField(
                   controller: amountController,
                   keyboardType: TextInputType.number,
-                  onSubmitted: (_) {
-                    FocusScope.of(context).unfocus();
-                  },
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   decoration: const InputDecoration(
                     labelText: "금액 입력 (예: 10000)",
                     border: OutlineInputBorder(),
                     contentPadding:
-                    EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                        EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   ),
                 ),
               ),
@@ -195,14 +176,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () async {
                   FocusScope.of(context).unfocus();
                   await Future.delayed(const Duration(milliseconds: 300));
-                  await _searchPlaces(); // ✅ await 사용 가능
+                  await _searchPlaces();
                 },
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                      borderRadius: BorderRadius.circular(12)),
                   padding:
-                  const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                      const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
                 ),
@@ -227,9 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: isSelected ? Colors.white : Colors.black,
                     ),
                     onSelected: (_) {
-                      setState(() {
-                        _selectedCategory = category;
-                      });
+                      setState(() => _selectedCategory = category);
                     },
                   ),
                 );
@@ -243,8 +221,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardVisible = bottomInset > 0;
+
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text("얼마GO"),
         actions: [
@@ -255,22 +236,40 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView( // 👈 키보드 대응
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(
-                  children: [
-                    Expanded(flex: 8, child: const NaverMapScreen()),
-                    Expanded(flex: 2, child: _buildInputSection()),
-                  ],
-                ),
+      body: Stack(
+        children: [
+          // 🗺 지도 배경
+          const Positioned.fill(child: NaverMapScreen()),
+
+          // 🧾 입력창 + 카테고리 버튼 (키보드가 보일 때 위로 띄움)
+          Align(
+            alignment: isKeyboardVisible
+                ? Alignment.bottomCenter
+                : Alignment.bottomLeft,
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: isKeyboardVisible ? bottomInset : 20,
+                left: 10,
+                right: 10,
+                top: 10,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Material(
+                    color: Colors.white,
+                    elevation: 8,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: _buildInputSection(),
+                    ),
+                  ),
+                ],
               ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
