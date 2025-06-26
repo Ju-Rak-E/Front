@@ -1,7 +1,10 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'dart:math';
+import 'package:dio/dio.dart';
+import '../service/marker_service.dart';
+import '../dio/dio_instance.dart';
 
 class NaverMapScreen extends StatefulWidget {
   const NaverMapScreen({super.key});
@@ -13,8 +16,6 @@ class NaverMapScreen extends StatefulWidget {
     required double lng,
     required double radius,
   }) {
-    print(
-        "📍 updateRadiusExternally() 호출됨: lat=$lat, lng=$lng, radius=$radius");
     _mapState?._updateRadiusExternally(lat, lng, radius);
   }
 
@@ -24,23 +25,30 @@ class NaverMapScreen extends StatefulWidget {
 
 class _NaverMapScreenState extends State<NaverMapScreen> {
   late NaverMapController _mapController;
-  NLatLng _currentLatLng = const NLatLng(37.5665, 126.9780);
+  NLatLng _currentLatLng = const NLatLng(37.5665, 126.9780); // 기본값: 서울 시청
   NMarker? _myLocationMarker;
   NCircleOverlay? _radiusCircle;
   bool _isMapReady = false;
+
+  final MarkerService _markerService = MarkerService(dio);
+  final List<NMarker> _dynamicMarkers = [];
 
   @override
   void initState() {
     super.initState();
     NaverMapScreen._mapState = this;
-    Future.microtask(() => _initializeLocation());
+
+    Future.microtask(() async {
+      setupDio();
+      await _initializeLocation();
+    });
   }
 
   Future<void> _initializeLocation() async {
-    final permission = await Geolocator.checkPermission();
+    var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      await Geolocator.requestPermission();
+      permission = await Geolocator.requestPermission();
     }
 
     final position = await Geolocator.getCurrentPosition(
@@ -73,8 +81,7 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
     );
   }
 
-  void _updateRadiusExternally(double lat, double lng, double radius) {
-    print("✅ updateRadiusExternally called with: $lat, $lng, $radius");
+  void _updateRadiusExternally(double lat, double lng, double radius) async {
     _currentLatLng = NLatLng(lat, lng);
 
     final circle = NCircleOverlay(
@@ -87,35 +94,115 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
     );
 
     _mapController.clearOverlays();
+    _dynamicMarkers.clear();
 
     if (_myLocationMarker != null) {
       _mapController.addOverlay(_myLocationMarker!);
     }
-
     _mapController.addOverlay(circle);
 
+    // 카메라 영역 계산
     const earthRadius = 6371000.0;
     final angularDistance = radius / earthRadius;
-
-    final minLat = lat - (angularDistance * 180 / pi);
-    final maxLat = lat + (angularDistance * 180 / pi);
-    final minLng = lng - (angularDistance * 180 / pi) / cos(lat * pi / 180);
-    final maxLng = lng + (angularDistance * 180 / pi) / cos(lat * pi / 180);
+    final minLat = lat - (angularDistance * 180 / math.pi);
+    final maxLat = lat + (angularDistance * 180 / math.pi);
+    final minLng =
+        lng - (angularDistance * 180 / math.pi) / math.cos(lat * math.pi / 180);
+    final maxLng =
+        lng + (angularDistance * 180 / math.pi) / math.cos(lat * math.pi / 180);
 
     final bounds = NLatLngBounds(
       southWest: NLatLng(minLat, minLng),
       northEast: NLatLng(maxLat, maxLng),
     );
 
-    final cameraUpdate = NCameraUpdate.fitBounds(
-      bounds,
-      padding: const EdgeInsets.all(50),
+    _mapController.updateCamera(
+      NCameraUpdate.fitBounds(bounds, padding: const EdgeInsets.all(50)),
     );
-    _mapController.updateCamera(cameraUpdate);
 
     setState(() {
       _radiusCircle = circle;
     });
+
+    try {
+      final markers = await _markerService.fetchMarkers(
+        lat: lat,
+        lng: lng,
+        radius: radius / 1000,
+      );
+
+      for (final marker in markers) {
+        final pos = marker.position;
+        if (pos.latitude == 0 || pos.longitude == 0) {
+          print("⚠️ 유효하지 않은 마커 건너뜀");
+          continue;
+        }
+
+        // 📍 마커 클릭 시 말풍선 띄우기
+        marker.setOnTapListener((overlay) {
+          final title = marker.caption?.text ?? '이름 없음';
+          _showMarkerInfoBottomSheet(title, pos);
+        });
+
+        _mapController.addOverlay(marker);
+        _dynamicMarkers.add(marker);
+      }
+
+      print("✅ ${_dynamicMarkers.length}개 마커 지도에 추가 완료");
+    } catch (e, st) {
+      print("❌ 마커 로딩 실패: $e");
+      print("📛 StackTrace: $st");
+    }
+  }
+
+  void _showMarkerInfoBottomSheet(String title, NLatLng position) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      print(
+                          '🧭 코스 생성 클릭: ${position.latitude}, ${position.longitude}');
+                      // TODO: 여기에 코스 생성 로직 연결
+                    },
+                    icon: const Icon(Icons.map),
+                    label: const Text("코스 생성"),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      print(
+                          '🚕 카카오T 클릭: ${position.latitude}, ${position.longitude}');
+                      // TODO: url_launcher로 카카오T 호출 URI 연결 가능
+                    },
+                    icon: const Icon(Icons.local_taxi),
+                    label: const Text("카카오T"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -130,6 +217,7 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
             ),
             locationButtonEnable: true,
             scaleBarEnable: true,
+            consumeSymbolTapEvents: true,
           ),
           onMapReady: (controller) {
             _mapController = controller;

@@ -8,6 +8,7 @@ import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'utils/route_manager.dart';
 import 'utils/api_client.dart';
+import 'dio/dio_instance.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,8 @@ Future<void> main() async {
   try {
     // ✅ .env 환경 변수 로드
     await dotenv.load(fileName: ".env");
+
+    setupDio(); // ✅ 인터셉터 등록 꼭 필요함
 
     print("✅ ENV LOADED");
     print("KAKAO_NATIVE_APP_KEY: ${dotenv.env['KAKAO_NATIVE_APP_KEY']}");

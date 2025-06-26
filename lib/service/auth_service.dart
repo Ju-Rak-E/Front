@@ -3,7 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart'; // Position 타입 사용을 위해 임포트
 import '../utils/api_client.dart'; // ApiClient 임포트 (수정됨)
-import '../utils/token_storage.dart'; // TokenStorage 임포트
+import '../service/token_storage.dart'; // TokenStorage 임포트
 import '../service/taxi_service.dart';
 
 //최초 작성자: 김병훈

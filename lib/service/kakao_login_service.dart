@@ -1,6 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
-import '../utils/token_storage.dart'; // JWT 토큰 저장/삭제용
+import '../service/token_storage.dart'; // JWT 토큰 저장/삭제용
 
 /// 카카오 로그인 인증 처리를 담당하는 서비스 클래스
 class KakaoLoginService {
