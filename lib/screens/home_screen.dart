@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rmago_app_env_fixed/service/tour_service.dart';
+import 'package:flutter_rmago_app_env_fixed/service/token_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../service/auth_service.dart';
 import '../service/kakao_login_service.dart';
@@ -30,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadMyLocation();
+    TokenStorage.debugPrintStoredTokens();
   }
 
   Future<void> _loadMyLocation() async {
@@ -72,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("기본 요금 ${baseFare.toString()}원 이상 가능합니다!"),
-          duration: Duration(seconds: 1.5),
+          duration: Duration(seconds: 2),
         ),
       );
       return;
@@ -116,6 +119,14 @@ class _HomeScreenState extends State<HomeScreen> {
           _places = [];
         });
 
+        // ✅ 관광지 요청 실행 (이 줄만 추가하면 됨!)
+        await TourService.fetchTourSpotsWithinRadius(
+          centerLat: _myLat!,
+          centerLng: _myLng!,
+          radiusInMeters: radius,
+        );
+
+        // ⭕ 지도 반경 표시
         NaverMapScreen.updateRadiusExternally(
           lat: _myLat!,
           lng: _myLng!,

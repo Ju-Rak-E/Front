@@ -27,6 +27,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/splashImage.png
+    - assets/images/Orange.png
     - assets/map/map.html
     - .env
   fonts:

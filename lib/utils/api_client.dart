@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dio_interceptor.dart';
+import '../dio/dio_interceptor.dart';
 
 /// API 요청을 처리하는 클라이언트 클래스 (싱글톤)
 class ApiClient {
