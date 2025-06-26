@@ -15,8 +15,9 @@ class NaverMapScreen extends StatefulWidget {
     required double lat,
     required double lng,
     required double radius,
+    String? category,
   }) {
-    _mapState?._updateRadiusExternally(lat, lng, radius);
+    _mapState?._updateRadiusExternally(lat, lng, radius, category!);
   }
 
   @override
@@ -61,7 +62,6 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
     _myLocationMarker = NMarker(
       id: 'my_location',
       position: _currentLatLng,
-      caption: const NOverlayCaption(text: '📍 내 위치'),
     );
 
     if (_isMapReady) {
@@ -81,7 +81,7 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
     );
   }
 
-  void _updateRadiusExternally(double lat, double lng, double radius) async {
+  void _updateRadiusExternally(double lat, double lng, double radius, String category) async {
     _currentLatLng = NLatLng(lat, lng);
 
     final circle = NCircleOverlay(
@@ -129,6 +129,7 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
         lat: lat,
         lng: lng,
         radius: radius / 1000,
+        category:category,
       );
 
       for (final marker in markers) {

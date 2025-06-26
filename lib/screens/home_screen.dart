@@ -28,6 +28,18 @@ class _HomeScreenState extends State<HomeScreen> {
   double? _myLat;
   double? _myLng;
 
+  final List<String> _categories = [
+    '관광지',
+    '문화시설',
+    '행사',
+    '여행',
+    '레포츠',
+    '숙박',
+    '쇼핑',
+    '음식점'
+  ];
+  String _selectedCategory = '관광지';
+
   @override
   void initState() {
     super.initState();
@@ -111,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
         latitude: _myLat!,
         longitude: _myLng!,
         fare: amount,
+        category: _selectedCategory,
       );
 
       if (radius != null) {
@@ -131,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
           lat: _myLat!,
           lng: _myLng!,
           radius: radius,
+          category: _selectedCategory,
         );
       } else {
         setState(() {
@@ -155,31 +169,72 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildInputSection() {
     return Padding(
       padding: const EdgeInsets.all(10),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: TextField(
-              controller: amountController,
-              keyboardType: TextInputType.number,
-              onSubmitted: (_) {
-                FocusScope.of(context).unfocus(); // 키보드만 내리기
-              },
-              decoration: const InputDecoration(
-                labelText: "금액 입력 (예: 10000)",
-                border: OutlineInputBorder(),
-                contentPadding:
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  onSubmitted: (_) {
+                    FocusScope.of(context).unfocus();
+                  },
+                  decoration: const InputDecoration(
+                    labelText: "금액 입력 (예: 10000)",
+                    border: OutlineInputBorder(),
+                    contentPadding:
                     EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () async {
+                  FocusScope.of(context).unfocus();
+                  await Future.delayed(const Duration(milliseconds: 300));
+                  await _searchPlaces(); // ✅ await 사용 가능
+                },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding:
+                  const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text("검색"),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed: () async {
-              FocusScope.of(context).unfocus();
-              await Future.delayed(const Duration(milliseconds: 300));
-              _searchPlaces();
-            },
-            child: const Text("검색"),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _categories.map((category) {
+                final isSelected = _selectedCategory == category;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: ChoiceChip(
+                    label: Text(category),
+                    selected: isSelected,
+                    selectedColor: Colors.blue,
+                    backgroundColor: Colors.grey[200],
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                    onSelected: (_) {
+                      setState(() {
+                        _selectedCategory = category;
+                      });
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ],
       ),
@@ -189,6 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text("얼마GO"),
         actions: [
@@ -201,14 +257,18 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final mapHeight = constraints.maxHeight * 0.85;
-          final inputHeight = constraints.maxHeight * 0.15;
-
-          return Column(
-            children: [
-              SizedBox(height: mapHeight, child: const NaverMapScreen()),
-              SizedBox(height: inputHeight, child: _buildInputSection()),
-            ],
+          return SingleChildScrollView( // 👈 키보드 대응
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    Expanded(flex: 8, child: const NaverMapScreen()),
+                    Expanded(flex: 2, child: _buildInputSection()),
+                  ],
+                ),
+              ),
+            ),
           );
         },
       ),

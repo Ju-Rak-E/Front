@@ -13,6 +13,7 @@ class MarkerService {
     required double lat,
     required double lng,
     required double radius,
+    required String category,
   }) async {
     print('📡 [MarkerService] 마커 불러오기 시작');
 
@@ -23,6 +24,7 @@ class MarkerService {
           'latitude': lat,
           'longitude': lng,
           'radius': radius,
+          'category': category,
         },
         options: Options(extra: {'requiresAuth': true}),
       );

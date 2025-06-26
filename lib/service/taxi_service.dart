@@ -10,6 +10,7 @@ class TaxiService {
     required double latitude,
     required double longitude,
     required int fare,
+    required String category,
   }) async {
     final url = Uri.parse('$baseUrl/api/taxi/estimate-radius');
 
@@ -27,6 +28,7 @@ class TaxiService {
         'longitude': longitude,
         'fare': fare,
         'mode': 'MULTIPLE', // 이전에 언급된 백엔드 요청에서 mode가 빠져있었습니다. 필요하다면 추가해주세요.
+        'category': category,
       }),
     );
 
