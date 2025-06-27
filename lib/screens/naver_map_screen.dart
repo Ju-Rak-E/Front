@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import '../service/marker_service.dart';
 import '../dio/dio_instance.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class NaverMapScreen extends StatefulWidget {
   const NaverMapScreen({super.key});
@@ -196,8 +197,9 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
                       final lng = position.longitude;
                       print('🧭 코스 생성 클릭: $lat, $lng');
 
-                      final url = Uri.parse(
-                          'http://192.168.0.16:8080/api/laas/recommend');
+                      final backendBaseUrl = dotenv.env['BACKEND_BASE_URL']!;
+                      final url =
+                          Uri.parse('$backendBaseUrl/api/laas/recommend');
                       final token = await TokenStorage.getAccessToken();
 
                       final response = await http.post(
