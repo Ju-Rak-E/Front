@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import '../service/marker_service.dart';
 import '../dio/dio_instance.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class NaverMapScreen extends StatefulWidget {
   const NaverMapScreen({super.key});
@@ -183,19 +184,29 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
                 children: [
                   ElevatedButton.icon(
                     onPressed: () async {
-                      Navigator.pop(context);
+                      // 🔧 1. 모든 포커스 제거 → 키보드 내림
+                      FocusManager.instance.primaryFocus?.unfocus();
+
+                      // 🔧 2. 키보드가 내려갈 시간 확보
+                      await Future.delayed(const Duration(milliseconds: 200));
+
+                      // 🔧 3. BottomSheet 닫기
+                      if (context.mounted) Navigator.pop(context);
+
                       final lat = position.latitude;
                       final lng = position.longitude;
                       print('🧭 코스 생성 클릭: $lat, $lng');
 
-                      final url = Uri.parse('http://192.168.0.2:8080/api/laas/recommend');
+                      final backendBaseUrl = dotenv.env['BACKEND_BASE_URL']!;
+                      final url =
+                          Uri.parse('$backendBaseUrl/api/laas/recommend');
                       final token = await TokenStorage.getAccessToken();
 
                       final response = await http.post(
                         url,
                         headers: {
                           'Content-Type': 'application/json',
-                          'Authorization': 'Bearer $token', // 토큰 필요 시 주석 해제
+                          'Authorization': 'Bearer $token',
                         },
                         body: jsonEncode({
                           'title': title,
@@ -204,23 +215,30 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
                         }),
                       );
 
+                      if (!context.mounted) return; // 🔒 context 체크
+
                       if (response.statusCode == 200) {
                         final jsonData = json.decode(response.body);
-                        final laasResult = jsonData['choices'][0]['message']['content'];
-                        print("라스 결과: ${laasResult}");
+                        final laasResult =
+                            jsonData['choices'][0]['message']['content'];
+                        print("라스 결과: $laasResult");
 
-                        // 🎯 모달로 결과 표시
+                        // 🔐 이 타이밍에 포커스 강제 제거 (트릭!)
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                        });
+
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: Text("추천 결과"),
+                            title: const Text("추천 결과"),
                             content: SingleChildScrollView(
-                              child: Text(laasResult),
+                              child: Text(laasResult), // ✅ 스크롤 가능하게 변경
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
-                                child: Text("닫기"),
+                                child: const Text("닫기"),
                               ),
                             ],
                           ),
@@ -229,12 +247,12 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: Text("에러"),
+                            title: const Text("에러"),
                             content: Text("요청 실패: ${response.statusCode}"),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
-                                child: Text("닫기"),
+                                child: const Text("닫기"),
                               ),
                             ],
                           ),

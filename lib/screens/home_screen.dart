@@ -160,6 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Expanded(
                 child: TextField(
+                  autofocus: false,
                   controller: amountController,
                   keyboardType: TextInputType.number,
                   onSubmitted: (_) => FocusScope.of(context).unfocus(),
