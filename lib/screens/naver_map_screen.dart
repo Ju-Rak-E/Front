@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:flutter_rmago_app_env_fixed/service/token_storage.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import '../service/marker_service.dart';
 import '../dio/dio_instance.dart';
 
@@ -179,11 +182,64 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.pop(context);
-                      print(
-                          '🧭 코스 생성 클릭: ${position.latitude}, ${position.longitude}');
-                      // TODO: 여기에 코스 생성 로직 연결
+                      final lat = position.latitude;
+                      final lng = position.longitude;
+                      print('🧭 코스 생성 클릭: $lat, $lng');
+
+                      final url = Uri.parse('http://192.168.0.2:8080/api/laas/recommend');
+                      final token = await TokenStorage.getAccessToken();
+
+                      final response = await http.post(
+                        url,
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': 'Bearer $token', // 토큰 필요 시 주석 해제
+                        },
+                        body: jsonEncode({
+                          'title': title,
+                          'lat': lat,
+                          'lng': lng,
+                        }),
+                      );
+
+                      if (response.statusCode == 200) {
+                        final jsonData = json.decode(response.body);
+                        final laasResult = jsonData['choices'][0]['message']['content'];
+                        print("라스 결과: ${laasResult}");
+
+                        // 🎯 모달로 결과 표시
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text("추천 결과"),
+                            content: SingleChildScrollView(
+                              child: Text(laasResult),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text("닫기"),
+                              ),
+                            ],
+                          ),
+                        );
+                      } else {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text("에러"),
+                            content: Text("요청 실패: ${response.statusCode}"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text("닫기"),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                     },
                     icon: const Icon(Icons.map),
                     label: const Text("코스 생성"),
@@ -193,7 +249,6 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
                       Navigator.pop(context);
                       print(
                           '🚕 카카오T 클릭: ${position.latitude}, ${position.longitude}');
-                      // TODO: url_launcher로 카카오T 호출 URI 연결 가능
                     },
                     icon: const Icon(Icons.local_taxi),
                     label: const Text("카카오T"),
