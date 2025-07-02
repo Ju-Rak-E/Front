@@ -137,11 +137,14 @@ class _AboutScreenState extends State<AboutScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildUpdateItem('🍽️ 선호 플레이스 카테고리 필터링'),
-                  _buildUpdateItem('👥 친구와 함께 갈 플레이스 고르기'),
-                  _buildUpdateItem('📊 개인 맞춤 추천 알고리즘'),
+                  _buildUpdateItem('📊 사용자 취향과 소비 패턴을 반영한 개인 맞춤형 코스 추천'),
+                  _buildUpdateItem('👥 친구나 연인과 실시간으로 코스를 공유하고 함께 이동할 수 있는 기능 제공'),
+                  _buildUpdateItem('🚖 추천 장소를 선택하여 가기로 결정하면 Kakao T와 연동하여 실제 택시 호출'),
+                  _buildUpdateItem('🚦 택시 외에도 버스, 지하철, 킥보드 등 다양한 교통수단과 연계'),
+                  _buildUpdateItem('📝 사용자들이 실제로 다녀온 코스에 대해 후기와 팁을 남길 수 있는 커뮤니티'),
                   _buildUpdateItem('🎁 쿠폰 및 할인 정보 제공'),
-                  _buildUpdateItem('📝 리뷰 및 평점 시스템'),
+                  _buildUpdateItem('👀 추천된 주요명소 중 클릭 시, 유사 명소(관광공사 API 활용)도 함께 추천'),
+                  _buildUpdateItem('🤝 잘 알려지지 않은 로컬 관광지도 포함하여 추천 범위 확장 및 지역 관광 활성화'),
                 ],
               ),
             ),
@@ -413,7 +416,7 @@ class _AboutScreenState extends State<AboutScreen> {
   void _launchEmail() async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
-      path: 'contact@rmago.com',
+      path: 'nikmir419@gmail.com',
       query: 'subject=얼마Go 문의사항',
     );
     if (await canLaunchUrl(emailUri)) {
@@ -422,7 +425,7 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   void _launchGitHub() async {
-    final Uri githubUri = Uri.parse('https://github.com/rmago');
+    final Uri githubUri = Uri.parse('https://github.com/Ju-Rak-E');
     if (await canLaunchUrl(githubUri)) {
       await launchUrl(githubUri);
     }
